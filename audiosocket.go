@@ -2,10 +2,10 @@ package audiosocket
 
 import (
 	"encoding/binary"
+	"fmt"
 	"io"
 
-	"github.com/gofrs/uuid"
-	"github.com/pkg/errors"
+	"github.com/google/uuid"
 )
 
 // Message describes an audiosocket message/packet
@@ -96,7 +96,7 @@ func (m Message) Payload() []byte {
 // manually running this function.
 func (m Message) ID() (uuid.UUID, error) {
 	if m.Kind() != KindID {
-		return uuid.Nil, errors.Errorf("wrong message type %d", m.Kind())
+		return uuid.Nil, fmt.Errorf("wrong message type %d", m.Kind())
 	}
 	return uuid.FromBytes(m.Payload())
 }
@@ -107,7 +107,7 @@ func (m Message) ID() (uuid.UUID, error) {
 func GetID(r io.Reader) (uuid.UUID, error) {
 	m, err := NextMessage(r)
 	if err != nil {
-		return uuid.Nil, errors.Wrap(err, "failed to read message")
+		return uuid.Nil, fmt.Errorf("failed to read message: %w", err)
 	}
 	return m.ID()
 }
@@ -118,10 +118,10 @@ func NextMessage(r io.Reader) (Message, error) {
 
 	n, err := r.Read(hdr)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to read header")
+		return nil, fmt.Errorf("failed to read header: %w", err)
 	}
 	if n != 3 {
-		return nil, errors.Wrapf(err, "read wrong number of bytes (%d) for header", n)
+		return nil, fmt.Errorf("read wrong number of bytes (%d) for header: %w", n, err)
 	}
 
 	payloadLen := binary.BigEndian.Uint16(hdr[1:])
@@ -132,10 +132,10 @@ func NextMessage(r io.Reader) (Message, error) {
 	payload := make([]byte, payloadLen)
 	n, err = r.Read(payload)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to read payload")
+		return nil, fmt.Errorf("failed to read payload: %w", err)
 	}
 	if n != int(payloadLen) {
-		return nil, errors.Wrapf(err, "read wrong number of bytes (%d) for payload", n)
+		return nil, fmt.Errorf("read wrong number of bytes (%d) for payload: %w", n, err)
 	}
 
 	m := append(hdr, payload...)
@@ -158,7 +158,7 @@ func IDMessage(id uuid.UUID) Message {
 	out := make([]byte, 3, 3+16)
 	out[0] = KindID
 	binary.BigEndian.PutUint16(out[1:], 16)
-	return append(out, id.Bytes()...)
+	return append(out, id[:]...)
 }
 
 // SlinMessage creates a new Message from signed linear audio data
