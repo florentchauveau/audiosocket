@@ -121,7 +121,7 @@ func NextMessage(r io.Reader) (Message, error) {
 		return nil, fmt.Errorf("failed to read header: %w", err)
 	}
 	if n != 3 {
-		return nil, fmt.Errorf("read wrong number of bytes (%d) for header: %w", n, err)
+		return nil, fmt.Errorf("read wrong number of bytes (%d) for header", n)
 	}
 
 	payloadLen := binary.BigEndian.Uint16(hdr[1:])
@@ -135,7 +135,7 @@ func NextMessage(r io.Reader) (Message, error) {
 		return nil, fmt.Errorf("failed to read payload: %w", err)
 	}
 	if n != int(payloadLen) {
-		return nil, fmt.Errorf("read wrong number of bytes (%d) for payload: %w", n, err)
+		return nil, fmt.Errorf("read wrong number of bytes (%d) for payload", n)
 	}
 
 	m := append(hdr, payload...)
@@ -162,6 +162,7 @@ func IDMessage(id uuid.UUID) Message {
 }
 
 // SlinMessage creates a new Message from signed linear audio data
+// If the input is larger than 65535 bytes, this function will panic.
 func SlinMessage(in []byte) Message {
 	if len(in) > 65535 {
 		panic("audiosocket: message too large")
