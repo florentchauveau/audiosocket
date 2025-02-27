@@ -1,6 +1,6 @@
 # AudioSocket
 
-[![](https://godoc.org/github.com/CyCoreSystems/audiosocket?status.svg)](http://godoc.org/github.com/CyCoreSystems/audiosocket)
+[![](https://godoc.org/github.com/florentchauveau/audiosocket?status.svg)](http://godoc.org/github.com/florentchauveau/audiosocket)
 
 AudioSocket is a simple TCP-based protocol for sending and receiving realtime
 audio streams.
@@ -8,10 +8,19 @@ audio streams.
 There exists a protocol definition (below), a Go library, and Asterisk
 application and channel interfaces.
 
-**NOTE:**  as of 2020-01-15, AudioSocket has been included in the upstream Asterisk
-system.  While I am leaving the Asterisk patches here for use with previous
-versions, the Asterisk code in this repository should be considered obsolete.
-The Go code is up-to-date, maintained, and this is the primary source for it.
+**NOTE:** as of 2020-01-15, AudioSocket has been included in the upstream Asterisk
+system.  
+
+**NOTE** this is a fork of https://github.com/CyCoreSystems/audiosocket, with:
+- support for DTMF
+- support for Asterisk 22.X
+- updated code for Go 1.23
+- updated code using native Go error wrapping
+- fixed example
+
+**NOTE:** I have added [support for DTMF](https://github.com/florentchauveau/asterisk/commit/be399d1cef22be8398bb994b6be69319f821889c) 
+in the AudioSocket protocol. Here is the [patch](https://github.com/florentchauveau/asterisk/commit/be399d1cef22be8398bb994b6be69319f821889c.patch) 
+for Asterisk 22.X.
 
 ## Protocol definition
 
@@ -27,6 +36,7 @@ indication, for instance, is `0x00 0x00 0x00`.
 
   - `0x00` - Terminate the connection (socket closure is also sufficient)
   - `0x01` - Payload will contain the UUID (16-byte binary representation) for the audio stream
+  - `0x03` - Payload is 1 byte (ascii) DTMF (dual-tone multi-frequency) digit
   - `0x10` - Payload is signed linear, 16-bit, 8kHz, mono PCM (little-endian)
   - `0xff` - An error has occurred; payload is the (optional)
     application-specific error code.  Asterisk-generated error codes are listed
